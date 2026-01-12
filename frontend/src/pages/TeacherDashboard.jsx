@@ -15,8 +15,8 @@
 
 import { useState, useEffect } from 'react';
 import { useAuth } from '../contexts/AuthContext';
-import { QRCodeSVG } from 'react-qr-code';
-import { collection, addDoc, query, where, getDocs, orderBy, limit } from 'firebase/firestore';
+import QRCode from 'react-qr-code';
+import { collection, setDoc, doc, query, where, getDocs, orderBy, limit } from 'firebase/firestore';
 import { db } from '../services/firebase';
 import { FiPlus, FiMapPin, FiClock, FiUsers, FiLogOut } from 'react-icons/fi';
 import { useNavigate } from 'react-router-dom';
@@ -76,7 +76,7 @@ function TeacherDashboard() {
             const sessionId = `SESSION_${Date.now()}`;
             const expiryTime = new Date(Date.now() + sessionForm.durationMinutes * 60000);
 
-            // Create session in Firestore
+            // Create session in Firestore with sessionId as document ID
             const sessionData = {
                 sessionId: sessionId,
                 courseName: sessionForm.courseName,
@@ -92,7 +92,8 @@ function TeacherDashboard() {
                 active: true
             };
 
-            await addDoc(collection(db, 'sessions'), sessionData);
+            // Use setDoc with doc() to set the document ID to sessionId
+            await setDoc(doc(db, 'sessions', sessionId), sessionData);
 
             // Set as active session for QR display
             setActiveSession({ ...sessionData, id: sessionId });
@@ -283,7 +284,7 @@ function TeacherDashboard() {
                         display: 'inline-block',
                         marginBottom: 'var(--spacing-md)'
                     }}>
-                        <QRCodeSVG value={activeSession.sessionId} size={256} />
+                        <QRCode value={activeSession.sessionId} size={256} />
                     </div>
 
                     <p style={{ color: 'var(--text-secondary)', fontSize: 'var(--font-size-sm)' }}>

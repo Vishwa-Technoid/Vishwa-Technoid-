@@ -1,0 +1,9 @@
+{
+    "sessionId": "SESSION_1768237904581",
+    "studentId": "test-student-123",
+    "studentEmail": "student@test.com",
+    "location": {
+        "latitude": 12.34,
+        "longitude": 56.78
+    }
+}
