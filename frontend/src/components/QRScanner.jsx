@@ -125,7 +125,12 @@ function QRScanner({ onSuccess, onError }) {
             if (response.ok && data.success) {
                 onSuccess && onSuccess(data);
             } else {
-                onError && onError(data.message || 'Failed to mark attendance');
+                // Enhanced error message with debug info
+                let errorMsg = data.message || 'Failed to mark attendance';
+                if (data.debug) {
+                    errorMsg += `\n\nDebug Info:\nYour location: ${data.debug.yourLocation}\nClassroom: ${data.debug.classLocation}\nDistance: ${data.debug.distance}m (need: ${data.debug.required}m)`;
+                }
+                onError && onError(errorMsg);
                 // Restart scanner for retry
                 setScanning(true);
                 setTimeout(() => {
@@ -159,24 +164,35 @@ function QRScanner({ onSuccess, onError }) {
                 borderRadius: 'var(--radius-sm)',
                 marginBottom: 'var(--spacing-md)',
                 background: location ? 'rgba(0, 242, 254, 0.1)' : 'rgba(245, 87, 108, 0.1)',
-                border: `1px solid ${location ? 'rgba(0, 242, 254, 0.3)' : 'rgba(245, 87, 108, 0.3)'}`,
-                display: 'flex',
-                alignItems: 'center',
-                gap: '0.5rem'
+                border: `1px solid ${location ? 'rgba(0, 242, 254, 0.3)' : 'rgba(245, 87, 108, 0.3)'}`
             }}>
-                <FiMapPin />
-                {location ? (
-                    <span style={{ fontSize: 'var(--font-size-sm)', color: '#4facfe' }}>
-                        Location acquired ✓
-                    </span>
-                ) : locationError ? (
-                    <span style={{ fontSize: 'var(--font-size-sm)', color: '#ff6b8a' }}>
-                        {locationError}
-                    </span>
-                ) : (
-                    <span style={{ fontSize: 'var(--font-size-sm)', color: 'var(--text-secondary)' }}>
-                        Getting your location...
-                    </span>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: location ? '0.5rem' : '0' }}>
+                    <FiMapPin />
+                    {location ? (
+                        <span style={{ fontSize: 'var(--font-size-sm)', color: '#4facfe' }}>
+                            Location acquired ✓
+                        </span>
+                    ) : locationError ? (
+                        <span style={{ fontSize: 'var(--font-size-sm)', color: '#ff6b8a' }}>
+                            {locationError}
+                        </span>
+                    ) : (
+                        <span style={{ fontSize: 'var(--font-size-sm)', color: 'var(--text-secondary)' }}>
+                            Getting your location...
+                        </span>
+                    )}
+                </div>
+                {/* Display coordinates for debugging */}
+                {location && (
+                    <div style={{
+                        fontSize: 'var(--font-size-xs)',
+                        color: 'var(--text-muted)',
+                        fontFamily: 'monospace',
+                        marginTop: '0.25rem'
+                    }}>
+                        Your location: {location.latitude.toFixed(6)}, {location.longitude.toFixed(6)}
+                        {location.accuracy && ` (±${Math.round(location.accuracy)}m)`}
+                    </div>
                 )}
             </div>
 

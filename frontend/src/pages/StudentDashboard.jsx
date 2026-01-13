@@ -44,12 +44,13 @@ function StudentDashboard() {
         setLoading(true);
 
         try {
-            // GREEN CODING: Query optimization with index and limit
+            // GREEN CODING: Query optimization with limit
+            // Note: Removed orderBy to avoid needing composite index
+            // We'll sort client-side instead
             const q = query(
                 collection(db, 'attendance'),
                 where('studentId', '==', user.uid),
-                orderBy('markedAt', 'desc'),
-                limit(20) // Limit to recent 20 records
+                limit(50) // Increased limit since we're sorting client-side
             );
 
             const snapshot = await getDocs(q);
@@ -58,9 +59,28 @@ function StudentDashboard() {
                 ...doc.data()
             }));
 
-            setAttendanceHistory(records);
+            // Sort by markedAt on client-side (descending - newest first)
+            records.sort((a, b) => {
+                const dateA = new Date(a.markedAt);
+                const dateB = new Date(b.markedAt);
+                return dateB - dateA;
+            });
+
+            // Take only the most recent 20
+            const recentRecords = records.slice(0, 20);
+
+            console.log(`Fetched ${recentRecords.length} attendance records for user ${user.uid}`);
+            setAttendanceHistory(recentRecords);
         } catch (error) {
             console.error('Error fetching attendance:', error);
+            console.error('Error code:', error.code);
+            console.error('Error message:', error.message);
+
+            // Show error message to user
+            setMessage({
+                type: 'error',
+                text: `Failed to load attendance history: ${error.message}`
+            });
         }
 
         setLoading(false);

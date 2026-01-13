@@ -107,18 +107,38 @@ router.post('/mark', async (req, res) => {
         }
 
         // Step 3: Verify location
+        // Use default 50m radius if not specified
+        const allowedRadius = session.location.radiusMeters || 50;
+
         const locationCheck = verifyLocation(
             location.latitude,
             location.longitude,
             session.location.latitude,
             session.location.longitude,
-            session.location.radiusMeters
+            allowedRadius
         );
+
+        // Log for debugging
+        console.log('Location Verification:', {
+            studentLat: location.latitude,
+            studentLon: location.longitude,
+            classroomLat: session.location.latitude,
+            classroomLon: session.location.longitude,
+            distance: locationCheck.distance,
+            maxDistance: locationCheck.maxDistance,
+            valid: locationCheck.valid
+        });
 
         if (!locationCheck.valid) {
             return res.status(400).json({
                 success: false,
-                message: `You are ${locationCheck.distance}m away. Must be within ${locationCheck.maxDistance}m`
+                message: `You are ${locationCheck.distance}m away. Must be within ${locationCheck.maxDistance}m`,
+                debug: {
+                    yourLocation: `${location.latitude.toFixed(6)}, ${location.longitude.toFixed(6)}`,
+                    classLocation: `${session.location.latitude.toFixed(6)}, ${session.location.longitude.toFixed(6)}`,
+                    distance: locationCheck.distance,
+                    required: locationCheck.maxDistance
+                }
             });
         }
 
